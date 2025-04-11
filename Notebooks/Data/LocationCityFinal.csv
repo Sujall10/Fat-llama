@@ -1,0 +1,101 @@
+﻿Location ID,City,State
+1,Visakhapatnam,Andhra Pradesh
+2,Vijayawada,Andhra Pradesh
+3,Guntur,Andhra Pradesh
+4,Nellore,Andhra Pradesh
+5,Itanagar,Arunachal Pradesh
+6,Naharlagun,Arunachal Pradesh
+7,Guwahati,Assam
+8,Silchar,Assam
+9,Dibrugarh,Assam
+10,Patna,Bihar
+11,Gaya,Bihar
+12,Bhagalpur,Bihar
+13,Muzaffarpur,Bihar
+14,Raipur,Chhattisgarh
+15,Bhilai,Chhattisgarh
+16,Panaji,Goa
+17,Margao,Goa
+18,Vasco da Gama,Goa
+19,Ahmedabad,Gujarat
+20,Surat,Gujarat
+21,Vadodara,Gujarat
+22,Gandhinagar,Gujarat
+23,Rajkot,Gujarat
+24,Faridabad,Haryana
+25,Gurgaon,Haryana
+26,Panipat,Haryana
+27,Hisar,Haryana
+28,Shimla,Himachal Pradesh
+29,Dharamshala,Himachal Pradesh
+30,Solan,Himachal Pradesh
+31,Ranchi,Jharkhand
+32,Jamshedpur,Jharkhand
+33,Dhanbad,Jharkhand
+34,Bengaluru,Karnataka
+35,Mysuru,Karnataka
+36,Hubli,Karnataka
+37,Mangalore,Karnataka
+38,Thiruvananthapuram,Kerala
+39,Kochi,Kerala
+40,Kozhikode,Kerala
+41,Indore,Madhya Pradesh
+42,Bhopal,Madhya Pradesh
+43,Jabalpur,Madhya Pradesh
+44,Gwalior,Madhya Pradesh
+45,Mumbai,Maharashtra
+46,Pune,Maharashtra
+47,Nagpur,Maharashtra
+48,Kakching,Manipur
+49,Imphal,Manipur
+50,Tura,Meghalaya
+51,Shillong,Meghalaya
+52,Aizawl,Mizoram
+53,Saiha,Mizoram
+54,Dimapur,Nagaland
+55,Kohima,Nagaland
+56,Bhubaneswar,Odisha
+57,Cuttack,Odisha
+58,Rourkela,Odisha
+59,Ludhiana,Punjab
+60,Amritsar,Punjab
+61,Jalandhar,Punjab
+62,Jaipur,Rajasthan
+63,Jodhpur,Rajasthan
+64,Udaipur,Rajasthan
+65,Namchi,Sikkim
+66,Gangtok,Sikkim
+67,Chennai,Tamil Nadu
+68,Coimbatore,Tamil Nadu
+69,Madurai,Tamil Nadu
+70,Tiruchirappalli,Tamil Nadu
+71,Hyderabad,Telangana
+72,Warangal,Telangana
+73,Nizamabad,Telangana
+74,Unakoti,Tripura
+75,Dharmanagar,Tripura
+76,Agartala,Tripura
+77,Lucknow,Uttar Pradesh
+78,Kanpur,Uttar Pradesh
+79,Varanasi,Uttar Pradesh
+80,Agra,Uttar Pradesh
+81,Dehradun,Uttarakhand
+82,Haridwar,Uttarakhand
+83,Haldwani,Uttarakhand
+84,Kolkata,West Bengal
+85,Asansol,West Bengal
+86,Siliguri,West Bengal
+87,Rohini,Delhi
+88,Delhi,Delhi
+89,Chandigarh,Chandigarh
+90,Karaikal,Puducherry
+91,Puducherry,Puducherry
+92,Diglipur,Andaman and Nicobar Islands
+93,Port Blair,Andaman and Nicobar Islands
+94,Leh,Ladakh
+95,Kargil,Ladakh
+96,Kavaratti,Lakshadweep
+97,Baramulla,Jammu and Kashmir
+98,Srinagar,Jammu and Kashmir
+99,Daman,Dadra and Nagar Haveli and Daman and Diu
+100,Silvassa,Dadra and Nagar Haveli and Daman and Diu
