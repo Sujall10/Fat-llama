@@ -2,6 +2,12 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.metrics import roc_auc_score
+from xgboost import XGBClassifier
+import optuna
+import joblib
 
 load_dotenv()
 uri = os.getenv("url")
@@ -27,6 +33,7 @@ providers_collection = db['providers']
 location_collection = db['location']
 users_collection = db['users']
 bookings_collection = db['bookings']
+Model_training_Churn_collection = db['Model_training_Churn']
 # renter_data = list(renters_collection.find())
 
 '''
@@ -57,5 +64,133 @@ df_users = pd.DataFrame(users_data)
 
 bookings_data = list(bookings_collection.find({}, {"_id": 0}))
 df_bookings = pd.DataFrame(bookings_data)
-# print(df_bookings)
+print(df_bookings)
 
+# print(df_users.columns)
+
+Churn_data = list(Model_training_Churn_collection.find({}, {"_id": 0}))
+df_Churn = pd.DataFrame(Churn_data)
+# print(df_Churn)
+
+bookings_df = pd.merge(df_items, df_bookings, on='item_id', how = 'inner')
+# bookings_df['return_end'] = pd.to_datetime(bookings_df['return_end'])
+# bookings_df['rental_start'] = pd.to_datetime(bookings_df['rental_start'])
+bookings_df['rental_duration'] = (pd.to_datetime(bookings_df['return_end']) - pd.to_datetime(bookings_df['rental_start'])).dt.total_seconds() / 3600
+# print(bookings_df[['user_id', 'item_id' ,'rental_duration']])
+bookings_df['price_per_hour'] = bookings_df['price_per_day']/24
+bookings_df['expected_payment'] = bookings_df['price_per_day'] * bookings_df['rental_days']
+bookings_df['payment_ratio'] = bookings_df['final_payment'] / bookings_df['expected_payment']
+bookings_df['payment_ratio'] = bookings_df['payment_ratio'].replace([np.inf, -np.inf], np.nan).fillna(1.0)
+
+def booking(bookings_df):
+    bookings = bookings_df.groupby('user_id').agg(
+        total_bookings=('Booking_Id', 'count'),
+        last_booking_date=('booking_date', 'max'),
+        first_booking_date=('booking_date', 'min'),
+        total_spent=('final_payment', 'sum'),
+        avg_booking_fee=('booking_fee', 'mean'),
+        avg_final_payment=('final_payment', 'mean'),
+        avg_rental_days=('rental_days', 'mean'),
+        avg_rental_duration_hrs=('rental_duration', 'mean'),
+        avg_price_per_day=('price_per_day', 'mean'),
+        avg_price_per_hour=('price_per_hour', 'mean'),
+        avg_rating=('rating', 'mean'),
+        review_count=('review', lambda x: x.notna().sum()),
+        unique_items=('item_id', pd.Series.nunique),
+        unique_categories=('category', pd.Series.nunique),
+        unique_subcategories=('subcategory', pd.Series.nunique),
+        unique_providers=('provider_id_x', pd.Series.nunique),
+        unique_locations=('location_id', pd.Series.nunique),
+        avg_payment_ratio=('payment_ratio', 'mean'),
+        avg_expected_payment=('expected_payment', 'mean')
+    ).reset_index()
+    return bookings
+
+
+if __name__ == "__main__":
+    
+    churnn = pd.read_csv('Notebooks\\IPYNB\\CHRN.csv')
+    # churnn = churnn.drop(columns={"last_booking_date",'first_booking_date'})
+    df_Churn = pd.merge(churnn, booking(bookings_df), on='user_id', how='inner')
+    df_Churn = df_Churn.drop(columns={'last_booking_date','first_booking_date'})
+    print(df_Churn.columns)
+    print(df_Churn.info())
+    
+    '''
+    Correlation matrix:
+    ====================
+    corr_matrix = df_Churn.corr()
+    
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    
+    plt.figure(figsize=(12, 8))
+    
+    # Create the heatmap
+    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", linewidths=0.5)
+    
+    plt.show()
+    '''
+    
+    X = df_Churn.drop(columns=["user_id", "churned"])
+    y = df_Churn["churned"]
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
+    
+    def objective(trial):
+        params = {
+            "n_estimators": trial.suggest_int("n_estimators", 100, 1000),
+            "max_depth": trial.suggest_int("max_depth", 3, 15),
+            "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
+            "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+            "gamma": trial.suggest_float("gamma", 0, 5),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0, 10),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0, 10),
+            "use_label_encoder": False,
+            "eval_metric": "logloss",
+            "random_state": 42
+        }
+    
+        model = XGBClassifier(**params)
+    
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        aucs = []
+        for train_idx, valid_idx in cv.split(X_train, y_train):
+            X_tr, X_val = X_train.iloc[train_idx], X_train.iloc[valid_idx]
+            y_tr, y_val = y_train.iloc[train_idx], y_train.iloc[valid_idx]
+    
+            model.fit(X_tr, y_tr)
+            preds = model.predict_proba(X_val)[:, 1]
+            auc = roc_auc_score(y_val, preds)
+            aucs.append(auc)
+    
+        return np.mean(aucs)
+    
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=50)
+    
+    print("Best trial:")
+    print(study.best_trial)
+    
+    best_params = study.best_trial.params
+    best_params.update({
+        "use_label_encoder": False,
+        "eval_metric": "logloss",
+        "random_state": 42
+    })
+    
+    final_model = XGBClassifier(**best_params)
+    final_model.fit(X_train, y_train)
+    
+    y_pred = final_model.predict_proba(X_test)[:, 1]
+    y_t = final_model.predict_proba(X_train)[:, 1]
+    test_auc = roc_auc_score(y_test, y_pred)
+    train_auc = roc_auc_score(y_train, y_t)
+    print(f"Test ROC AUC: {test_auc:.4f}")
+    print(f"Train ROC AUC: {train_auc:.4f}")
+    
+    joblib.dump(final_model, "xgb_churn_model.pkl")
+    print("Model saved as xgb_churn_model.pkl")
